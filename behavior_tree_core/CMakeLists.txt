@@ -6,12 +6,12 @@ project(behavior_tree_core)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
+  genmsg
   message_generation
   roscpp
   rospy
-  std_msgs
   roslaunch
-  genmsg
+  std_msgs
 )
 
 
@@ -31,6 +31,7 @@ add_definitions(-Wall -lglut -lGL -std=c++0x)
 catkin_package(
   CATKIN_DEPENDS actionlib_msgs
   INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
 )
 
 
@@ -56,13 +57,6 @@ add_definitions(${OpenGL_DEFINITIONS})
 if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 endif(NOT OPENGL_FOUND)
-
-#########################################################
-# FIND GTest
-#########################################################
-find_package(GTest)
-include_directories(${GTEST_INCLUDE_DIRS})
-
 
 INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS} include)
 
@@ -101,23 +95,19 @@ add_dependencies(${PROJECT_NAME} behavior_tree_core_generate_messages_cpp)
 add_executable(tree src/tree.cpp)
 target_link_libraries(tree
   ${catkin_LIBRARIES}
-  ${PROJECT_NAME})
+  ${PROJECT_NAME}
+)
 
-add_executable(gtest_tree src/gtest/gtest_tree.cpp)
+catkin_add_gtest(gtest_tree src/gtest/gtest_tree.cpp)
 target_link_libraries(gtest_tree
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${GTEST_LIBRARIES})
+  ${GTest_LIBRARIES}
+)
 
 add_executable(gtest_ros src/gtest/external_ros_nodes_test.cpp)
 target_link_libraries(gtest_ros
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${GTEST_LIBRARIES})
-
-
-#add_executable(ros_test src/ros_test.cpp ${BTSrcLibrary} ${BTHeadLibrary})
-#target_link_libraries(ros_test ${catkin_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-#add_dependencies(ros_test behavior_tree_core_generate_messages_cpp)
-
+)
 
