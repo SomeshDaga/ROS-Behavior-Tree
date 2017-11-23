@@ -6,6 +6,7 @@ project(behavior_tree_core)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
+  behavior_tree_msgs
   genmsg
   message_generation
   roscpp
@@ -14,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
+find_package(Boost REQUIRED COMPONENTS)
 
 add_action_files(
   DIRECTORY action
@@ -29,7 +31,9 @@ generate_messages(
 add_definitions(-Wall -lglut -lGL -std=c++0x)
 
 catkin_package(
-  CATKIN_DEPENDS actionlib_msgs
+  CATKIN_DEPENDS
+    actionlib_msgs
+    behavior_tree_msgs
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
 )
@@ -67,8 +71,6 @@ src/action_node.cpp
 src/behavior_tree.cpp
 src/condition_node.cpp
 src/control_node.cpp
-#src/decorator_retry_node.cpp
-#src/decorator_negation_node.cpp
 src/draw.cpp
 src/exceptions.cpp
 src/leaf_node.cpp
@@ -83,13 +85,20 @@ src/actions/action_test_node.cpp
 src/conditions/condition_test_node.cpp
 src/actions/ros_action.cpp
 src/conditions/ros_condition.cpp
+src/blackboard/blackboard.cpp
 src/dot_bt.cpp
 )
 
 # Compile the core library with name ${PROJECT_NAME}=behavior_tree_core
 # You can create executables which target to this library for using BTs
 add_library(${PROJECT_NAME} ${BTSrcLibrary} ${BTHeadLibrary})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+target_link_libraries(${PROJECT_NAME}
+  ${Boost_LIBRARIES}
+  ${catkin_LIBRARIES} 
+  ${OPENGL_LIBRARIES} 
+  ${GLUT_LIBRARY}
+)
+
 add_dependencies(${PROJECT_NAME} behavior_tree_core_generate_messages_cpp)
 
 add_executable(tree src/tree.cpp)

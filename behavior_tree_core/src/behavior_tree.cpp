@@ -10,14 +10,65 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
+#include "blackboard/blackboard.h"
 #include <behavior_tree.h>
 #include <dot_bt.h>
+#include "behavior_tree_msgs/KeyValue.h"
+#include "behavior_tree_msgs/SetKvPairs.h"
+
 #include <ros/ros.h>
 
+#include <stdlib.h>
 
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
-void Execute(BT::ControlNode* root, int TickPeriod_milliseconds)
+bool update_blackboard(behavior_tree_msgs::SetKvPairs::Request &req,
+                       behavior_tree_msgs::SetKvPairs::Response &res,
+                       boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
+{
+    for (unsigned int i=0; i < req.kv_pairs.size(); i++)
+    {
+        behavior_tree_msgs::KeyValue kv = req.kv_pairs[i];
+
+        switch(kv.value_type)
+        {
+            case behavior_tree_msgs::KeyValue::BOOL:
+                // std::string value = kv.value;
+                std::transform(kv.value.begin(), kv.value.end(), kv.value.begin(), ::tolower);
+
+                if (kv.value == std::string("true"))
+                    blkbrd_ptr->update_kv< bool >(kv.key, true);
+                else if (kv.value == std::string("false"))
+                    blkbrd_ptr->update_kv< bool >(kv.key, false);
+                else
+                    ROS_ERROR("[BEHAVIOR_TREE_CORE] Invalid Boolean representation for KeyValue Pair...Ignoring");
+                break;
+
+            case behavior_tree_msgs::KeyValue::INT:
+                blkbrd_ptr->update_kv< int >(kv.key, atoi(kv.value.c_str()));
+                break;
+
+            case behavior_tree_msgs::KeyValue::DOUBLE:
+                blkbrd_ptr->update_kv< double >(kv.key, atof(kv.value.c_str()));
+                break;
+
+            case behavior_tree_msgs::KeyValue::STRING:
+                blkbrd_ptr->update_kv< std::string >(kv.key, kv.value);
+                break;
+
+            default:
+                ROS_ERROR("[BEHAVIOR_TREE_CORE] Unsupported Type for KeyValue Pair...Ignoring");
+                break;
+        }
+    }
+
+    res.received = true;
+    return true;
+}
+
+void Execute(BT::ControlNode* root,
+             int TickPeriod_milliseconds)
 {
     std::cout << "Start Drawing!" << std::endl;
     // Starts in another thread the drawing of the BT
@@ -42,6 +93,46 @@ void Execute(BT::ControlNode* root, int TickPeriod_milliseconds)
             // when the root returns a status it resets the colors of the tree
             root->ResetColorState();
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(TickPeriod_milliseconds));
+    }
+}
+
+
+void Execute(BT::ControlNode* root,
+             int TickPeriod_milliseconds,
+             ros::NodeHandle& nh,
+             boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
+{
+    std::cout << "Start Drawing!" << std::endl;
+    // Starts in another thread the drawing of the BT
+    std::thread t2(&drawTree, root);
+    t2.detach();
+    BT::DotBt dotbt(root);
+    std::thread t(&BT::DotBt::publish, dotbt);
+
+    root->ResetColorState();
+
+    ros::ServiceServer service = 
+        nh.advertiseService<behavior_tree_msgs::SetKvPairs::Request, behavior_tree_msgs::SetKvPairs::Response>
+        ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
+
+    while (ros::ok())
+    {
+        DEBUG_STDOUT("Ticking the root node !");
+
+        // Ticking the root node
+        root->Tick();
+        // Printing its state
+        // root->GetNodeState();
+
+        if (root->get_status() != BT::RUNNING)
+        {
+            // when the root returns a status it resets the colors of the tree
+            root->ResetColorState();
+        }
+
+        ros::spinOnce();
         std::this_thread::sleep_for(std::chrono::milliseconds(TickPeriod_milliseconds));
     }
 }
