@@ -15,6 +15,7 @@ namespace BT
 
 	bool Blackboard::key_exists(std::string key) const
 	{
+		boost::mutex::scoped_lock lock(mutex_);
 		if (map_.find(key) == map_.end())
 			return false;
 		else
