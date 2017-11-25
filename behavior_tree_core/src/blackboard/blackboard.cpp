@@ -7,10 +7,8 @@ namespace BT
 {
 	Blackboard::Blackboard(std::vector<std::pair<std::string, boost::any>> kv_pairs)
 	{
-		for (std::vector<std::pair<std::string, boost::any>>::iterator it = kv_pairs.begin(); it != kv_pairs.end(); it++)
-		{
-			map_.insert(*it);
-		}
+		for (auto kv : kv_pairs)
+			map_.insert(kv);
 	}
 
 	bool Blackboard::key_exists(std::string key) const

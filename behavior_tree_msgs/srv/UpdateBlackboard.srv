@@ -1,0 +1,7 @@
+behavior_tree_msgs/KeyValue[] kv_pairs
+---
+uint8 SUCCESS=0
+uint8 INVALID_KVS=1
+
+uint8 updated
+string[] keys_failed

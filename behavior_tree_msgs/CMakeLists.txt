@@ -13,7 +13,7 @@ add_message_files(
 
 add_service_files(
   FILES
-    SetKvPairs.srv
+    UpdateBlackboard.srv
 )
 
 generate_messages(

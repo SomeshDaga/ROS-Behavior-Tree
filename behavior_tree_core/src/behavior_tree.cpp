@@ -14,27 +14,25 @@
 #include <behavior_tree.h>
 #include <dot_bt.h>
 #include "behavior_tree_msgs/KeyValue.h"
-#include "behavior_tree_msgs/SetKvPairs.h"
+#include "behavior_tree_msgs/UpdateBlackboard.h"
 
 #include <ros/ros.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-bool update_blackboard(behavior_tree_msgs::SetKvPairs::Request &req,
-                       behavior_tree_msgs::SetKvPairs::Response &res,
+bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
+                       behavior_tree_msgs::UpdateBlackboard::Response &res,
                        boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
 {
-    for (unsigned int i=0; i < req.kv_pairs.size(); i++)
+    for (auto kv : req.kv_pairs)
     {
-        behavior_tree_msgs::KeyValue kv = req.kv_pairs[i];
-
         switch(kv.value_type)
         {
             case behavior_tree_msgs::KeyValue::BOOL:
-                // std::string value = kv.value;
+                // Convert expected 'boolean' string to lower case
                 std::transform(kv.value.begin(), kv.value.end(), kv.value.begin(), ::tolower);
 
                 if (kv.value == std::string("true"))
@@ -42,7 +40,10 @@ bool update_blackboard(behavior_tree_msgs::SetKvPairs::Request &req,
                 else if (kv.value == std::string("false"))
                     blkbrd_ptr->update_kv< bool >(kv.key, false);
                 else
+                {
+                    res.keys_failed.push_back(kv.key);
                     ROS_ERROR("[BEHAVIOR_TREE_CORE] Invalid Boolean representation for KeyValue Pair...Ignoring");
+                }
                 break;
 
             case behavior_tree_msgs::KeyValue::INT:
@@ -58,12 +59,17 @@ bool update_blackboard(behavior_tree_msgs::SetKvPairs::Request &req,
                 break;
 
             default:
+                res.keys_failed.push_back(kv.key);
                 ROS_ERROR("[BEHAVIOR_TREE_CORE] Unsupported Type for KeyValue Pair...Ignoring");
                 break;
         }
     }
 
-    res.received = true;
+    if (res.keys_failed.size() == 0)
+        res.updated = behavior_tree_msgs::UpdateBlackboard::Response::SUCCESS;
+    else
+        res.updated = behavior_tree_msgs::UpdateBlackboard::Response::INVALID_KVS;
+
     return true;
 }
 
@@ -94,6 +100,8 @@ void Execute(BT::ControlNode* root,
             root->ResetColorState();
         }
 
+        // To process callbacks to any Action Clients and/or Services
+        ros::spinOnce();
         std::this_thread::sleep_for(std::chrono::milliseconds(TickPeriod_milliseconds));
     }
 }
@@ -104,35 +112,10 @@ void Execute(BT::ControlNode* root,
              ros::NodeHandle& nh,
              boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
 {
-    std::cout << "Start Drawing!" << std::endl;
-    // Starts in another thread the drawing of the BT
-    std::thread t2(&drawTree, root);
-    t2.detach();
-    BT::DotBt dotbt(root);
-    std::thread t(&BT::DotBt::publish, dotbt);
-
-    root->ResetColorState();
 
     ros::ServiceServer service = 
-        nh.advertiseService<behavior_tree_msgs::SetKvPairs::Request, behavior_tree_msgs::SetKvPairs::Response>
+        nh.advertiseService<behavior_tree_msgs::UpdateBlackboard::Request, behavior_tree_msgs::UpdateBlackboard::Response>
         ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
 
-    while (ros::ok())
-    {
-        DEBUG_STDOUT("Ticking the root node !");
-
-        // Ticking the root node
-        root->Tick();
-        // Printing its state
-        // root->GetNodeState();
-
-        if (root->get_status() != BT::RUNNING)
-        {
-            // when the root returns a status it resets the colors of the tree
-            root->ResetColorState();
-        }
-
-        ros::spinOnce();
-        std::this_thread::sleep_for(std::chrono::milliseconds(TickPeriod_milliseconds));
-    }
+    Execute(root, TickPeriod_milliseconds);
 }

@@ -21,13 +21,13 @@ public:
 	explicit Blackboard(std::vector< std::pair<std::string, boost::any> > kv_pairs);
 
 	template <typename T>
-	void add_kv(std::string key, T value)
+	bool add_kv(std::string key, T value)
 	{
-		if (!key_exists(key))
-		{
-			boost::mutex::scoped_lock lock(mutex_);
+		boost::mutex::scoped_lock lock(mutex_);
+		std::pair<std::map<std::string, boost::any>::iterator, bool> result =
 			map_.insert(std::pair<std::string, boost::any>(key, value));
-		}
+
+		return result.second;
 	}
 
 	template <typename T>
@@ -45,6 +45,8 @@ public:
 			boost::mutex::scoped_lock lock(mutex_);
 			map_.find(key)->second = value;
 		}
+		else
+			add_kv<T>(key, value);
 	}
 
 	bool key_exists(std::string key) const;
