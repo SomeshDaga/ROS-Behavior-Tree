@@ -18,10 +18,12 @@
 
 #include <ros/ros.h>
 
-#include <cstdlib>
-
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <algorithm>
+#include <cstdlib>
+#include <string>
 
 bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
                        behavior_tree_msgs::UpdateBlackboard::Response &res,
@@ -29,38 +31,40 @@ bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
 {
     for (auto kv : req.kv_pairs)
     {
-        switch(kv.value_type)
+        switch (kv.value_type)
         {
             case behavior_tree_msgs::KeyValue::BOOL:
                 // Convert expected 'boolean' string to lower case
                 std::transform(kv.value.begin(), kv.value.end(), kv.value.begin(), ::tolower);
 
                 if (kv.value == std::string("true"))
-                    blkbrd_ptr->update_kv< bool >(kv.key, true);
+                    blkbrd_ptr->UpdateKv< bool >(kv.key, true);
                 else if (kv.value == std::string("false"))
-                    blkbrd_ptr->update_kv< bool >(kv.key, false);
+                    blkbrd_ptr->UpdateKv< bool >(kv.key, false);
                 else
                 {
                     res.keys_failed.push_back(kv.key);
-                    ROS_ERROR("[BEHAVIOR_TREE_CORE] Invalid Boolean representation for KeyValue Pair...Ignoring");
+                    ROS_ERROR_STREAM("[BEHAVIOR_TREE_CORE] Invalid Boolean representation for KeyValue Pair ("
+                        << kv.key << ", " << kv.value << "). Ignoring");
                 }
                 break;
 
             case behavior_tree_msgs::KeyValue::INT:
-                blkbrd_ptr->update_kv< int >(kv.key, atoi(kv.value.c_str()));
+                blkbrd_ptr->UpdateKv< int >(kv.key, atoi(kv.value.c_str()));
                 break;
 
             case behavior_tree_msgs::KeyValue::DOUBLE:
-                blkbrd_ptr->update_kv< double >(kv.key, atof(kv.value.c_str()));
+                blkbrd_ptr->UpdateKv< double >(kv.key, atof(kv.value.c_str()));
                 break;
 
             case behavior_tree_msgs::KeyValue::STRING:
-                blkbrd_ptr->update_kv< std::string >(kv.key, kv.value);
+                blkbrd_ptr->UpdateKv< std::string >(kv.key, kv.value);
                 break;
 
             default:
                 res.keys_failed.push_back(kv.key);
-                ROS_ERROR("[BEHAVIOR_TREE_CORE] Unsupported Type for KeyValue Pair...Ignoring");
+                ROS_ERROR_STREAM("[BEHAVIOR_TREE_CORE] Unsupported Type for KeyValue Pair (key: "
+                    << kv.key << "). Ignoring");
                 break;
         }
     }
@@ -112,9 +116,9 @@ void Execute(BT::ControlNode* root,
              ros::NodeHandle& nh,
              boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
 {
-
-    ros::ServiceServer service = 
-        nh.advertiseService<behavior_tree_msgs::UpdateBlackboard::Request, behavior_tree_msgs::UpdateBlackboard::Response>
+    ros::ServiceServer service =
+        nh.advertiseService<behavior_tree_msgs::UpdateBlackboard::Request,
+                            behavior_tree_msgs::UpdateBlackboard::Response>
         ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
 
     Execute(root, TickPeriod_milliseconds);

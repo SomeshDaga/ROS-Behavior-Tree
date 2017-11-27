@@ -13,7 +13,7 @@
 #ifndef TICK_ENGINE_H
 #define TICK_ENGINE_H
 
-#include <condition_variable>
+#include <condition_variable>  // NOLINT
 
 class TickEngine
 {

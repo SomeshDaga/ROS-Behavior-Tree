@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(behavior_tree_core)
 
-
-
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
@@ -10,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
   message_generation
   roscpp
+  roslint
   rospy
   roslaunch
   std_msgs
@@ -28,7 +27,7 @@ generate_messages(
 )
 
 
-add_definitions(-Wall -lglut -lGL -std=c++0x)
+add_definitions(-Wall -lglut -lGL -std=c++11)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -38,7 +37,7 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
 )
 
-
+roslint_cpp()
 
 #########################################################
 # FIND GLUT

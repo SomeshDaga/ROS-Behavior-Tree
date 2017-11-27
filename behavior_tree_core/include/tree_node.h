@@ -41,7 +41,7 @@
 
 #endif
 
-   #define DEBUG  // uncomment this line if you want to print debug messages
+#define DEBUG  // uncomment this line if you want to print debug messages
 
 #ifdef DEBUG
   // #define DEBUG_STDERR(x) (std::cerr << (x))
@@ -58,11 +58,10 @@
 
 #include <string>
 
-#include <thread>
-#include <chrono>
-#include <mutex>
-#include <condition_variable>
-
+#include <thread>  // NOLINT
+#include <chrono>  // NOLINT
+#include <mutex>  // NOLINT
+#include <condition_variable>  // NOLINT
 
 #include <tick_engine.h>
 #include <exceptions.h>
