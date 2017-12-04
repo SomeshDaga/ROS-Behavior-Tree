@@ -10,22 +10,26 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef TICK_ENGINE_H
-#define TICK_ENGINE_H
+#include "blackboard/blackboard.h"
 
-#include <condition_variable>  // NOLINT
+#include <boost/any.hpp>
 
-class TickEngine
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace BT
 {
-private:
-    int value_;
-    std::mutex mutex_;
-    std::condition_variable condition_variable_;
-public:
-    explicit TickEngine(int initial_value);
-    ~TickEngine();
-    void Wait();
-    void Tick();
-};
+    Blackboard::Blackboard(std::vector<std::pair<std::string, boost::any>> kv_pairs)
+    {
+        for (auto kv : kv_pairs)
+            map_.insert(kv);
+    }
 
-#endif  // TICK_ENGINE_H
+    bool Blackboard::KeyExists(std::string key) const
+    {
+        boost::mutex::scoped_lock lock(mutex_);
+        return map_.find(key) != map_.end();
+    }
+
+}  // namespace BT

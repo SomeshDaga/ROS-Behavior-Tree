@@ -10,22 +10,52 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef TICK_ENGINE_H
-#define TICK_ENGINE_H
+#ifndef BLACKBOARD_BLACKBOARD_H
+#define BLACKBOARD_BLACKBOARD_H
 
-#include <condition_variable>  // NOLINT
+#include <boost/any.hpp>
+#include <boost/thread/mutex.hpp>
 
-class TickEngine
+#include <stdexcept>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace BT
 {
-private:
-    int value_;
-    std::mutex mutex_;
-    std::condition_variable condition_variable_;
-public:
-    explicit TickEngine(int initial_value);
-    ~TickEngine();
-    void Wait();
-    void Tick();
-};
+class Blackboard
+{
+protected:
+    std::map<std::string, boost::any> map_;
 
-#endif  // TICK_ENGINE_H
+    mutable boost::mutex mutex_;
+
+public:
+    explicit Blackboard(std::vector< std::pair<std::string, boost::any> > kv_pairs);
+
+    template <typename T>
+    inline T GetValue(std::string key) const
+    {
+        if (!KeyExists(key))
+            throw std::invalid_argument("Key " + key + " does not exist");
+
+        boost::mutex::scoped_lock lock(mutex_);
+        return boost::any_cast<T>(map_.find(key)->second);
+    }
+
+    template<typename T>
+    inline void UpdateKv(std::string key, T value)
+    {
+        // Updates key-value pair if exists, else adds it to map_
+        boost::mutex::scoped_lock lock(mutex_);
+        map_[key] = value;
+    }
+
+    bool KeyExists(std::string key) const;
+
+    ~Blackboard()
+    {}
+};
+}  // namespace BT
+#endif  // BLACKBOARD_BLACKBOARD_H

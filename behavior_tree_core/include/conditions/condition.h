@@ -10,22 +10,32 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef TICK_ENGINE_H
-#define TICK_ENGINE_H
+#ifndef CONDITIONS_CONDITION_H
+#define CONDITIONS_CONDITION_H
 
-#include <condition_variable>  // NOLINT
+#include <condition_node.h>
+#include "blackboard/blackboard.h"
 
-class TickEngine
+#include <boost/shared_ptr.hpp>
+
+#include <string>
+
+namespace BT
 {
-private:
-    int value_;
-    std::mutex mutex_;
-    std::condition_variable condition_variable_;
+class Condition : public ConditionNode
+{
 public:
-    explicit TickEngine(int initial_value);
-    ~TickEngine();
-    void Wait();
-    void Tick();
+    // Constructor
+    Condition(std::string name, boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
+      :  ConditionNode::ConditionNode(name),
+         blkbrd_ptr_(blkbrd_ptr)
+    {}
+
+    ~Condition();
+
+protected:
+    boost::shared_ptr<BT::Blackboard> blkbrd_ptr_;
 };
 
-#endif  // TICK_ENGINE_H
+}  // namespace BT
+#endif  // CONDITIONS_CONDITION_H

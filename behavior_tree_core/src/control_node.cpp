@@ -32,7 +32,9 @@ void BT::ControlNode::AddChild(TreeNode* child)
 
         if (child->has_parent())
         {
-            throw BehaviorTreeException("'" + child->get_name() + " has a parent already. Please create different objects for multiple nodes. It makes the tinking/halting precedure easier.");
+            throw BehaviorTreeException("'" + child->get_name() +
+                " has a parent already. Please create different objects for multiple nodes."
+                "It makes the tinking/halting precedure easier.");
         }
 
     child->set_has_parent(true);

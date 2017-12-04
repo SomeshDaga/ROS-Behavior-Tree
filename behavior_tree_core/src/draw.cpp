@@ -489,7 +489,6 @@ void drawTree(BT::ControlNode* tree_)
         glutInit(&argc, argv);
         init = true;
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);  //  Antialiasing
-        glEnable(GL_MULTISAMPLE);
     }
     tree = tree_;
     depth = tree->Depth();

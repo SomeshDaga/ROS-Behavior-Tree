@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(behavior_tree_core)
 
-
-
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
+  behavior_tree_msgs
+  genmsg
   message_generation
   roscpp
+  roslint
   rospy
-  std_msgs
   roslaunch
-  genmsg
+  std_msgs
 )
 
+find_package(Boost REQUIRED COMPONENTS)
 
 add_action_files(
   DIRECTORY action
@@ -26,14 +27,17 @@ generate_messages(
 )
 
 
-add_definitions(-Wall -lglut -lGL -std=c++0x)
+add_definitions(-Wall -lglut -lGL -std=c++11)
 
 catkin_package(
-  CATKIN_DEPENDS actionlib_msgs
+  CATKIN_DEPENDS
+    actionlib_msgs
+    behavior_tree_msgs
   INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
 )
 
-
+roslint_cpp()
 
 #########################################################
 # FIND GLUT
@@ -57,13 +61,6 @@ if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 endif(NOT OPENGL_FOUND)
 
-#########################################################
-# FIND GTest
-#########################################################
-find_package(GTest)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-
 INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS} include)
 
 file(GLOB_RECURSE BTHeadLibrary include/*.h)
@@ -73,8 +70,6 @@ src/action_node.cpp
 src/behavior_tree.cpp
 src/condition_node.cpp
 src/control_node.cpp
-#src/decorator_retry_node.cpp
-#src/decorator_negation_node.cpp
 src/draw.cpp
 src/exceptions.cpp
 src/leaf_node.cpp
@@ -89,35 +84,38 @@ src/actions/action_test_node.cpp
 src/conditions/condition_test_node.cpp
 src/actions/ros_action.cpp
 src/conditions/ros_condition.cpp
+src/blackboard/blackboard.cpp
 src/dot_bt.cpp
 )
 
 # Compile the core library with name ${PROJECT_NAME}=behavior_tree_core
 # You can create executables which target to this library for using BTs
 add_library(${PROJECT_NAME} ${BTSrcLibrary} ${BTHeadLibrary})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+target_link_libraries(${PROJECT_NAME}
+  ${Boost_LIBRARIES}
+  ${catkin_LIBRARIES} 
+  ${OPENGL_LIBRARIES} 
+  ${GLUT_LIBRARY}
+)
+
 add_dependencies(${PROJECT_NAME} behavior_tree_core_generate_messages_cpp)
 
 add_executable(tree src/tree.cpp)
 target_link_libraries(tree
   ${catkin_LIBRARIES}
-  ${PROJECT_NAME})
+  ${PROJECT_NAME}
+)
 
-add_executable(gtest_tree src/gtest/gtest_tree.cpp)
+catkin_add_gtest(gtest_tree src/gtest/gtest_tree.cpp)
 target_link_libraries(gtest_tree
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${GTEST_LIBRARIES})
+  ${GTest_LIBRARIES}
+)
 
 add_executable(gtest_ros src/gtest/external_ros_nodes_test.cpp)
 target_link_libraries(gtest_ros
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${GTEST_LIBRARIES})
-
-
-#add_executable(ros_test src/ros_test.cpp ${BTSrcLibrary} ${BTHeadLibrary})
-#target_link_libraries(ros_test ${catkin_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-#add_dependencies(ros_test behavior_tree_core_generate_messages_cpp)
-
+)
 

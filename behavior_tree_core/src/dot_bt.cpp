@@ -20,9 +20,13 @@
 
 #include <dot_bt.h>
 #include <control_node.h>
+
 #include <std_msgs/String.h>
-#include <cctype>
+
 #include <algorithm>
+#include <cctype>
+#include <string>
+#include <vector>
 
 namespace BT
 {
@@ -67,10 +71,12 @@ std::string DotBt::defineNodeDot(TreeNode* node, const std::string& alias)
       output += "[label=\"D\" penwidth=\"2\" shape=\"diamond\"";
       break;
     case BT::ACTION:
-      output += "[label=\"" + node->get_name() + "\" penwidth=\"2\" shape=\"box\" fillcolor=\"palegreen\" style=\"filled\"";
+      output += "[label=\"" + node->get_name() +
+      "\" penwidth=\"2\" shape=\"box\" fillcolor=\"palegreen\" style=\"filled\"";
       break;
     case BT::CONDITION:
-      output += "[label=\"" + node->get_name() + "\" penwidth=\"2\" shape=\"ellipse\" fillcolor=\"khaki1\" style=\"filled\"";
+      output += "[label=\"" + node->get_name() +
+      "\" penwidth=\"2\" shape=\"ellipse\" fillcolor=\"khaki1\" style=\"filled\"";
       break;
     default:
       break;
@@ -149,7 +155,6 @@ void DotBt::produceDot(TreeNode* node, TreeNode* parent, const std::string& pare
     std::vector<TreeNode *> children = n->GetChildren();
     for (unsigned int i = 0; i < children.size(); i++)
     {
-
 //        if (children[i]->has_alias())
 //        {
 //            // cheking if I need to halt the child (has alias)

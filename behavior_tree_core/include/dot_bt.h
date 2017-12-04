@@ -161,7 +161,7 @@ private:
    * @brief A ROS publisher for publishing DotBt::dot_file_.
    */
   ros::Publisher dotbt_publisher_;
-  
+
   /**
    * @brief The root of the Behavior Tree.
    */

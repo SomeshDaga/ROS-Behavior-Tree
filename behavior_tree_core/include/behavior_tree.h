@@ -13,10 +13,6 @@
 #ifndef BEHAVIOR_TREE_H
 #define BEHAVIOR_TREE_H
 
-
-
-
-
 #include <draw.h>
 
 #include <parallel_node.h>
@@ -26,12 +22,15 @@
 #include <sequence_node_with_memory.h>
 #include <fallback_node_with_memory.h>
 
-
 #include <actions/action_test_node.h>
 #include <conditions/condition_test_node.h>
 #include <actions/ros_action.h>
 #include <conditions/ros_condition.h>
+#include "blackboard/blackboard.h"
 
+#include "behavior_tree_msgs/UpdateBlackboard.h"
+
+#include <boost/shared_ptr.hpp>
 
 #include <exceptions.h>
 
@@ -44,7 +43,16 @@
 #include "ros/ros.h"
 #include "std_msgs/UInt8.h"
 
-void Execute(BT::ControlNode* root, int TickPeriod_milliseconds);
+bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
+                       behavior_tree_msgs::UpdateBlackboard::Response &res,
+                       boost::shared_ptr<BT::Blackboard> blkbrd_ptr);
 
+void Execute(BT::ControlNode* root,
+             int TickPeriod_milliseconds);
+
+void Execute(BT::ControlNode* root,
+             int TickPeriod_milliseconds,
+             ros::NodeHandle& nh,
+             boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>());
 
 #endif  // BEHAVIOR_TREE_H
