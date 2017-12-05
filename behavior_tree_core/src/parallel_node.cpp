@@ -40,7 +40,7 @@ BT::ReturnStatus BT::ParallelNode::Tick()
             // Action nodes runs in another parallel, hence you cannot retrieve the status just by executing it.
             child_i_status_ = children_nodes_[i]->get_status();
 
-            if (child_i_status_ == BT::IDLE || child_i_status_ == BT::HALTED)
+            if ( (1 << child_i_status_) & tick_policy_ )
             {
                 // 1.1 If the action status is not running, the sequence node sends a tick to it.
                 DEBUG_STDOUT(get_name() << "NEEDS TO TICK " << children_nodes_[i]->get_name());

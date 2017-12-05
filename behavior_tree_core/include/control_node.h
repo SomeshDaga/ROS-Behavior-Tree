@@ -34,6 +34,8 @@ protected:
     // child i status. Used to rout the ticks
     ReturnStatus child_i_status_;
 
+    unsigned int tick_policy_;
+
 public:
     // Constructor
     explicit ControlNode(std::string name);
@@ -50,6 +52,8 @@ public:
     void ResetColorState();
     void HaltChildren(int i);
     int Depth();
+
+    void SetTickPolicy(unsigned int policy);
 
     // Methods used to access the node state without the
     // conditional waiting (only mutual access)

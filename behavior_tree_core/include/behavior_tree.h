@@ -48,11 +48,13 @@ bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
                        boost::shared_ptr<BT::Blackboard> blkbrd_ptr);
 
 void Execute(BT::ControlNode* root,
-             int TickPeriod_milliseconds);
+             int TickPeriod_milliseconds,
+             boost::function<void()> tick_callback = NULL);
 
 void Execute(BT::ControlNode* root,
              int TickPeriod_milliseconds,
              ros::NodeHandle& nh,
-             boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>());
+             boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>(),
+             boost::function<void()> tick_callback = NULL);
 
 #endif  // BEHAVIOR_TREE_H

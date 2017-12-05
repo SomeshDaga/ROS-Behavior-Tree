@@ -56,12 +56,12 @@ BT::ReturnStatus BT::SequenceNodeWithMemory::Tick()
 
             child_i_status_ = children_nodes_[current_child_idx_]->get_status();
             DEBUG_STDOUT(get_name() << " It is an action " << children_nodes_[current_child_idx_]->get_name()
-                         << " with status: " << child_i_status_);
+                         << " with status: " << child_i_status_ << ", and with tick policy: " << tick_policy_);
 
-            if (child_i_status_ == BT::IDLE || child_i_status_ == BT::HALTED)
+            if ( (1 << child_i_status_) & tick_policy_ )
             {
                 // 1.1) If the action status is not running, the sequence node sends a tick to it.
-                DEBUG_STDOUT(get_name() << "NEEDS TO TICK " << children_nodes_[current_child_idx_]->get_name());
+                DEBUG_STDOUT(get_name() << " NEEDS TO TICK " << children_nodes_[current_child_idx_]->get_name());
                 children_nodes_[current_child_idx_]->tick_engine.Tick();
 
                 // waits for the tick to arrive to the child
@@ -81,7 +81,7 @@ BT::ReturnStatus BT::SequenceNodeWithMemory::Tick()
             child_i_status_ = children_nodes_[current_child_idx_]->Tick();
         }
 
-        if (child_i_status_ == BT::SUCCESS ||child_i_status_ == BT::FAILURE )
+        if (child_i_status_ == BT::SUCCESS || child_i_status_ == BT::FAILURE)
         {
              // the child goes in idle if it has returned success or failure.
             children_nodes_[current_child_idx_]->set_status(BT::IDLE);

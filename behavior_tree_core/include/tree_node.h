@@ -90,6 +90,8 @@ enum ReturnStatus {RUNNING, SUCCESS, FAILURE, IDLE, HALTED, EXIT};
 //   returns failure.
 enum FailurePolicy {FAIL_ON_ONE, FAIL_ON_ALL};
 enum ResetPolity   {ON_SUCCESS_OR_FAILURE, ON_SUCCESS, ON_FAILURE};
+enum TickPolicy    {IDLE_OR_HALTED = 1 << BT::IDLE | 1 << BT::HALTED,
+                    IDLE_OR_RUNNING_OR_HALTED = BT::TickPolicy::IDLE_OR_HALTED | 1 << BT::RUNNING};
 
 // Enumerates the options for when a parallel node is considered to have succeeded:
 // - "SUCCEED_ON_ONE" indicates that the node will return success as soon as one

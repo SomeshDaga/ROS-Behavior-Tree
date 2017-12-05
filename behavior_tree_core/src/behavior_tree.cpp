@@ -78,7 +78,8 @@ bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
 }
 
 void Execute(BT::ControlNode* root,
-             int TickPeriod_milliseconds)
+             int TickPeriod_milliseconds,
+             boost::function<void()> tick_callback)
 {
     std::cout << "Start Drawing!" << std::endl;
     // Starts in another thread the drawing of the BT
@@ -98,6 +99,9 @@ void Execute(BT::ControlNode* root,
         // Printing its state
         // root->GetNodeState();
 
+        if (tick_callback)
+            tick_callback();
+
         if (root->get_status() != BT::RUNNING)
         {
             // when the root returns a status it resets the colors of the tree
@@ -114,12 +118,13 @@ void Execute(BT::ControlNode* root,
 void Execute(BT::ControlNode* root,
              int TickPeriod_milliseconds,
              ros::NodeHandle& nh,
-             boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
+             boost::shared_ptr<BT::Blackboard> blkbrd_ptr,
+             boost::function<void()> tick_callback)
 {
     ros::ServiceServer service =
         nh.advertiseService<behavior_tree_msgs::UpdateBlackboard::Request,
                             behavior_tree_msgs::UpdateBlackboard::Response>
         ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
 
-    Execute(root, TickPeriod_milliseconds);
+    Execute(root, TickPeriod_milliseconds, tick_callback);
 }

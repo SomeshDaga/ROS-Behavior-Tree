@@ -55,7 +55,7 @@ BT::ReturnStatus BT::FallbackNodeWithMemory::Tick()
             DEBUG_STDOUT(get_name() << " It is an action " << children_nodes_[current_child_idx_]->get_name()
                          << " with status: " << child_i_status_);
 
-            if (child_i_status_ == BT::IDLE || child_i_status_ == BT::HALTED)
+            if ( (1 << child_i_status_) & tick_policy_ )
             {
                 // 1.1) If the action status is not running, the sequence node sends a tick to it.
                 DEBUG_STDOUT(get_name() << "NEEDS TO TICK " << children_nodes_[current_child_idx_]->get_name());
