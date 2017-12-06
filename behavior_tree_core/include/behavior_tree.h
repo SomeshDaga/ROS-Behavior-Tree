@@ -13,8 +13,6 @@
 #ifndef BEHAVIOR_TREE_H
 #define BEHAVIOR_TREE_H
 
-#include <draw.h>
-
 #include <parallel_node.h>
 #include <fallback_node.h>
 #include <sequence_node.h>

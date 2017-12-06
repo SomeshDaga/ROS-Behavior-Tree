@@ -81,10 +81,6 @@ void Execute(BT::ControlNode* root,
              int TickPeriod_milliseconds,
              boost::function<void()> tick_callback)
 {
-    std::cout << "Start Drawing!" << std::endl;
-    // Starts in another thread the drawing of the BT
-    std::thread t2(&drawTree, root);
-    t2.detach();
     BT::DotBt dotbt(root);
     std::thread t(&BT::DotBt::publish, dotbt);
 
@@ -96,8 +92,6 @@ void Execute(BT::ControlNode* root,
 
         // Ticking the root node
         root->Tick();
-        // Printing its state
-        // root->GetNodeState();
 
         if (tick_callback)
             tick_callback();
