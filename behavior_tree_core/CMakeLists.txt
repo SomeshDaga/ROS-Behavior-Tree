@@ -45,8 +45,6 @@ file(GLOB_RECURSE BTHeadLibrary include/*.h
     include/draw.h
 )
 
-list(SORT BTHeadLibrary)
-
 set(BTSrcLibrary
 src/action_node.cpp
 src/actions/action_test_node.cpp
@@ -83,11 +81,8 @@ if(NOT OPENGL_FOUND)
 endif()
 
 if(GLUT_FOUND AND OPENGL_FOUND)
-  include_directories(${GLUT_INCLUDE_DIRS})
-  add_definitions(${GLUT_DEFINITIONS})
-  
-  include_directories(${OpenGL_INCLUDE_DIRS})
-  add_definitions(${OpenGL_DEFINITIONS})
+  include_directories(${GLUT_INCLUDE_DIR})
+  include_directories(${OPENGL_INCLUDE_DIR})
 
   set(BTHeadLibrary ${BTHeadLibrary} include/draw.h)
   set(BTSrcLibrary ${BTSrcLibrary} src/draw.cpp)
@@ -99,7 +94,7 @@ if(GLUT_FOUND AND OPENGL_FOUND)
     ${Boost_LIBRARIES}
     ${catkin_LIBRARIES} 
     ${GLUT_LIBRARY}
-    ${OpenGL_LIBRARIES}
+    ${OPENGL_LIBRARIES}
   )
 else()
   add_library(${PROJECT_NAME}_lib ${BTHeadLibrary} ${BTSrcLibrary})
