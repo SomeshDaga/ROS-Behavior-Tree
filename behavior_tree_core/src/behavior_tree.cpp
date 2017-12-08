@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <string>
+#include <utility>
+#include <vector>
 
 bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
                        behavior_tree_msgs::UpdateBlackboard::Response &res,
@@ -102,6 +104,8 @@ void Execute(BT::ControlNode* root,
             root->ResetColorState();
         }
 
+        ResetFinishedNodes(root);
+
         // To process callbacks to any Action Clients and/or Services
         ros::spinOnce();
         std::this_thread::sleep_for(std::chrono::milliseconds(TickPeriod_milliseconds));
@@ -121,4 +125,33 @@ void Execute(BT::ControlNode* root,
         ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
 
     Execute(root, TickPeriod_milliseconds, tick_callback);
+}
+
+void ResetFinishedNodes(BT::TreeNode* root)
+{
+    BT::ReturnStatus status = root->get_status();
+    if (status == BT::FAILURE || status == BT::SUCCESS)
+        root->set_status(BT::IDLE);
+
+    if (root->get_type() == BT::NodeType::CONTROL_NODE)
+    {
+        BT::ControlNode* ctrl_node = dynamic_cast<BT::ControlNode*>(root);
+        for (auto child : ctrl_node->GetChildren())
+            ResetFinishedNodes(child);
+    }
+}
+
+void GetLeafNodeStates(BT::TreeNode* root, std::vector<std::pair<BT::TreeNode*, BT::ReturnStatus>>& states)
+{
+    if (root->get_type() == BT::NodeType::CONTROL_NODE)
+    {
+        BT::ControlNode* ctrl_node = dynamic_cast<BT::ControlNode*>(root);
+        for (auto child : ctrl_node->GetChildren())
+            GetLeafNodeStates(child, states);
+    }
+    else
+    {
+        std::pair<BT::TreeNode*, BT::ReturnStatus> state(root, root->get_status());
+        states.push_back(state);
+    }
 }

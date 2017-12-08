@@ -62,10 +62,6 @@ BT::ReturnStatus BT::FallbackNode::Tick()
             // Ponderate on which status to send to the parent
             if (child_i_status_ != BT::FAILURE)
             {
-                if (child_i_status_ == BT::SUCCESS)
-                {
-                    children_nodes_[i]->set_status(BT::IDLE);  // the child goes in idle if it has returned success.
-                }
                 // If the  child status is not failure, halt the next children and return the status to your parent.
                 DEBUG_STDOUT(get_name() << " is HALTING children from " << (i+1));
                 HaltChildren(i+1);
@@ -75,7 +71,6 @@ BT::ReturnStatus BT::FallbackNode::Tick()
             else
             {
                 // the child returned failure.
-                children_nodes_[i]->set_status(BT::IDLE);
                 if (i == N_of_children_ - 1)
                 {
                     // If the  child status is failure, and it is the last child to be ticked,

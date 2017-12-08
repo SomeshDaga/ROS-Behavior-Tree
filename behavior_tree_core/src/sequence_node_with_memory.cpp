@@ -81,12 +81,6 @@ BT::ReturnStatus BT::SequenceNodeWithMemory::Tick()
             child_i_status_ = children_nodes_[current_child_idx_]->Tick();
         }
 
-        if (child_i_status_ == BT::SUCCESS || child_i_status_ == BT::FAILURE)
-        {
-             // the child goes in idle if it has returned success or failure.
-            children_nodes_[current_child_idx_]->set_status(BT::IDLE);
-        }
-
         if (child_i_status_ != BT::SUCCESS)
         {
             // If the  child status is not success, return the status

@@ -34,6 +34,8 @@
 
 #include <string>
 #include <map>
+#include <utility>
+#include <vector>
 
 #include <typeinfo>
 #include <math.h>       /* pow */
@@ -54,5 +56,9 @@ void Execute(BT::ControlNode* root,
              ros::NodeHandle& nh,
              boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>(),
              boost::function<void()> tick_callback = NULL);
+
+void ResetFinishedNodes(BT::TreeNode* root);
+
+void GetLeafNodeStates(BT::TreeNode* root, std::vector<std::pair<BT::TreeNode*, BT::ReturnStatus>>& states);
 
 #endif  // BEHAVIOR_TREE_H
