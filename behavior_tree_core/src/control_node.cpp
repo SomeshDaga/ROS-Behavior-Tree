@@ -18,7 +18,7 @@
 BT::ControlNode::ControlNode(std::string name) : TreeNode::TreeNode(name)
 {
     type_ = BT::CONTROL_NODE;
-
+    tick_policy_ = BT::TickPolicy::IDLE_OR_HALTED;
     // TODO(...) In case it is desired to set to idle remove the ReturnStatus
     // type in order to set the member variable
     // ReturnStatus child_i_status_ = BT::IDLE;  // commented out as unused
@@ -52,6 +52,11 @@ void BT::ControlNode::Halt()
     DEBUG_STDOUT("HALTING: "<< get_name());
     HaltChildren(0);
     set_status(BT::HALTED);
+}
+
+void BT::ControlNode::SetTickPolicy(unsigned int policy)
+{
+  tick_policy_ = policy;
 }
 
 std::vector<BT::TreeNode*> BT::ControlNode::GetChildren()

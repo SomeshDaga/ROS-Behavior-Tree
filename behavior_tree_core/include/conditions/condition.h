@@ -31,7 +31,7 @@ public:
          blkbrd_ptr_(blkbrd_ptr)
     {}
 
-    ~Condition();
+    ~Condition() {}
 
 protected:
     boost::shared_ptr<BT::Blackboard> blkbrd_ptr_;

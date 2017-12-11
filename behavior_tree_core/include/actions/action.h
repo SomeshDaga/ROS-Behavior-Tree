@@ -45,7 +45,6 @@ public:
         {
             tick_engine.Wait();
 
-            set_status(BT::RUNNING);
             status_ = BT::RUNNING;
 
             OnTick();

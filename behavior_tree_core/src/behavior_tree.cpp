@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <string>
+#include <utility>
+#include <vector>
 
 bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
                        behavior_tree_msgs::UpdateBlackboard::Response &res,
@@ -78,12 +80,9 @@ bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
 }
 
 void Execute(BT::ControlNode* root,
-             int TickPeriod_milliseconds)
+             int TickPeriod_milliseconds,
+             boost::function<void()> tick_callback)
 {
-    std::cout << "Start Drawing!" << std::endl;
-    // Starts in another thread the drawing of the BT
-    std::thread t2(&drawTree, root);
-    t2.detach();
     BT::DotBt dotbt(root);
     std::thread t(&BT::DotBt::publish, dotbt);
 
@@ -95,14 +94,17 @@ void Execute(BT::ControlNode* root,
 
         // Ticking the root node
         root->Tick();
-        // Printing its state
-        // root->GetNodeState();
+
+        if (tick_callback)
+            tick_callback();
 
         if (root->get_status() != BT::RUNNING)
         {
             // when the root returns a status it resets the colors of the tree
             root->ResetColorState();
         }
+
+        ResetFinishedNodes(root);
 
         // To process callbacks to any Action Clients and/or Services
         ros::spinOnce();
@@ -114,12 +116,42 @@ void Execute(BT::ControlNode* root,
 void Execute(BT::ControlNode* root,
              int TickPeriod_milliseconds,
              ros::NodeHandle& nh,
-             boost::shared_ptr<BT::Blackboard> blkbrd_ptr)
+             boost::shared_ptr<BT::Blackboard> blkbrd_ptr,
+             boost::function<void()> tick_callback)
 {
     ros::ServiceServer service =
         nh.advertiseService<behavior_tree_msgs::UpdateBlackboard::Request,
                             behavior_tree_msgs::UpdateBlackboard::Response>
         ("set_blackboard_kvps", boost::bind(update_blackboard, _1, _2, blkbrd_ptr));
 
-    Execute(root, TickPeriod_milliseconds);
+    Execute(root, TickPeriod_milliseconds, tick_callback);
+}
+
+void ResetFinishedNodes(BT::TreeNode* root)
+{
+    BT::ReturnStatus status = root->get_status();
+    if (status == BT::FAILURE || status == BT::SUCCESS)
+        root->set_status(BT::IDLE);
+
+    if (root->get_type() == BT::NodeType::CONTROL_NODE)
+    {
+        BT::ControlNode* ctrl_node = dynamic_cast<BT::ControlNode*>(root);
+        for (auto child : ctrl_node->GetChildren())
+            ResetFinishedNodes(child);
+    }
+}
+
+void GetLeafNodeStates(BT::TreeNode* root, std::vector<std::pair<BT::TreeNode*, BT::ReturnStatus>>& states)
+{
+    if (root->get_type() == BT::NodeType::CONTROL_NODE)
+    {
+        BT::ControlNode* ctrl_node = dynamic_cast<BT::ControlNode*>(root);
+        for (auto child : ctrl_node->GetChildren())
+            GetLeafNodeStates(child, states);
+    }
+    else
+    {
+        std::pair<BT::TreeNode*, BT::ReturnStatus> state(root, root->get_status());
+        states.push_back(state);
+    }
 }

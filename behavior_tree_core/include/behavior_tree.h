@@ -13,8 +13,6 @@
 #ifndef BEHAVIOR_TREE_H
 #define BEHAVIOR_TREE_H
 
-#include <draw.h>
-
 #include <parallel_node.h>
 #include <fallback_node.h>
 #include <sequence_node.h>
@@ -36,6 +34,8 @@
 
 #include <string>
 #include <map>
+#include <utility>
+#include <vector>
 
 #include <typeinfo>
 #include <math.h>       /* pow */
@@ -48,11 +48,17 @@ bool update_blackboard(behavior_tree_msgs::UpdateBlackboard::Request &req,
                        boost::shared_ptr<BT::Blackboard> blkbrd_ptr);
 
 void Execute(BT::ControlNode* root,
-             int TickPeriod_milliseconds);
+             int TickPeriod_milliseconds,
+             boost::function<void()> tick_callback = NULL);
 
 void Execute(BT::ControlNode* root,
              int TickPeriod_milliseconds,
              ros::NodeHandle& nh,
-             boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>());
+             boost::shared_ptr<BT::Blackboard> bklbrd_ptr = boost::shared_ptr<BT::Blackboard>(),
+             boost::function<void()> tick_callback = NULL);
+
+void ResetFinishedNodes(BT::TreeNode* root);
+
+void GetLeafNodeStates(BT::TreeNode* root, std::vector<std::pair<BT::TreeNode*, BT::ReturnStatus>>& states);
 
 #endif  // BEHAVIOR_TREE_H
